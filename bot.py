@@ -45,7 +45,6 @@ async def admins(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "Overseers of this establishment:\n\n" + "\n".join(names)
     )
 
-# ✅ UPDATED REPORT ONLY
 async def report(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.message.reply_to_message:
         await update.message.reply_text(
@@ -119,6 +118,7 @@ Response to /help.
 Commands are to be used with awareness and restraint."""
     await update.message.reply_text(text)
 
+# WARN
 async def warn(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.message.reply_to_message:
         return
@@ -138,20 +138,21 @@ async def warn(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if count == 1:
         await chat.restrict_member(user.id, ChatPermissions(can_send_messages=False), until_date=mute_until)
         await update.message.reply_text(
-            "Consider this a formal notice.\n\nI would prefer not to repeat myself over matters of basic conduct.\n\nYou will remain silent for a while."
+            f"{user.first_name}, consider this a formal notice.\n\nI would prefer not to repeat myself over matters of basic conduct.\n\nYou will remain silent for a while."
         )
 
     elif count == 2:
         await update.message.reply_text(
-            "You have already been addressed once.\n\nI trust I do not need to explain this again.\n\nAdjust yourself accordingly."
+            f"{user.first_name}, you have already been addressed once.\n\nI trust I do not need to explain this again.\n\nAdjust yourself accordingly."
         )
 
     elif count >= 3:
         await chat.ban_member(user.id)
         await update.message.reply_text(
-            "You were given sufficient opportunity.\n\nEven a butler has limits.\n\nThis concludes your presence here."
+            f"{user.first_name}, you were given sufficient opportunity.\n\nEven a butler has limits.\n\nThis concludes your presence here."
         )
 
+# WARNINGS
 async def warnings_check(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.message.reply_to_message:
         return
@@ -168,6 +169,7 @@ async def warnings_check(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"Current standing: {count} notice(s).\n\nI would advise not increasing that number."
         )
 
+# MUTE
 async def mute(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.message.reply_to_message:
         return
@@ -184,9 +186,10 @@ async def mute(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await chat.restrict_member(user.id, ChatPermissions(can_send_messages=False), until_date=mute_until)
 
     await update.message.reply_text(
-        "That will be sufficient.\n\nYou will remain silent for a while.\n\nDo consider your approach when you return."
+        f"{user.first_name}, that will be sufficient.\n\nYou will remain silent for a while.\n\nDo consider your approach when you return."
     )
 
+# UNMUTE
 async def unmute(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.message.reply_to_message:
         return
@@ -196,9 +199,10 @@ async def unmute(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.effective_chat.restrict_member(user.id, ChatPermissions(can_send_messages=True))
 
     await update.message.reply_text(
-        "You may proceed again.\n\nDo ensure the previous inconvenience is not repeated."
+        f"{user.first_name}, you may proceed again.\n\nDo ensure the previous inconvenience is not repeated."
     )
 
+# BAN
 async def ban(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.message.reply_to_message:
         return
@@ -219,9 +223,10 @@ async def ban(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await chat.ban_member(user.id)
 
     await update.message.reply_text(
-        "Your presence is no longer required.\n\nYou’ve exceeded what was permitted.\n\nThis matter is concluded."
+        f"{user.first_name}, your presence is no longer required.\n\nYou’ve exceeded what was permitted.\n\nThis matter is concluded."
     )
 
+# UNBAN
 async def unban(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if len(context.args) == 0:
         return
