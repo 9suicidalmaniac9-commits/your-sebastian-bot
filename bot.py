@@ -2,6 +2,10 @@ from telegram import Update, ChatPermissions
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
 from datetime import timedelta
 
+# ✅ ADDED (INLINE SYSTEM IMPORTS)
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import CallbackQueryHandler
+
 TOKEN = "8742040135:AAEbiEGlWG5i3ejpU_bsSgjH97u792OIkSE"
 
 # ================= OLD COMMANDS (UNCHANGED STYLE) =================
@@ -72,6 +76,14 @@ async def report(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 warnings = {}
 
+# ✅ ADDED (BUTTON BUILDER)
+def admin_controls(user_id):
+    return InlineKeyboardMarkup([
+        [InlineKeyboardButton("Remove Warn (admins only)", callback_data=f"removewarn_{user_id}")],
+        [InlineKeyboardButton("Unmute (admins only)", callback_data=f"unmute_{user_id}")],
+        [InlineKeyboardButton("Unban (admins only)", callback_data=f"unban_{user_id}")]
+    ])
+
 async def is_protected(user_id, chat):
     admins = await chat.get_administrators()
     return user_id in [a.user.id for a in admins]
@@ -138,18 +150,21 @@ async def warn(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if count == 1:
         await chat.restrict_member(user.id, ChatPermissions(can_send_messages=False), until_date=mute_until)
         await update.message.reply_text(
-            f"{user.first_name}, consider this a formal notice.\n\nI would prefer not to repeat myself over matters of basic conduct.\n\nYou will remain silent for a while."
+            f"{user.first_name}, consider this a formal notice.\n\nI would prefer not to repeat myself over matters of basic conduct.\n\nYou will remain silent for a while.",
+            reply_markup=admin_controls(user.id)  # ✅ ADDED
         )
 
     elif count == 2:
         await update.message.reply_text(
-            f"{user.first_name}, you have already been addressed once.\n\nI trust I do not need to explain this again.\n\nAdjust yourself accordingly."
+            f"{user.first_name}, you have already been addressed once.\n\nI trust I do not need to explain this again.\n\nAdjust yourself accordingly.",
+            reply_markup=admin_controls(user.id)  # ✅ ADDED
         )
 
     elif count >= 3:
         await chat.ban_member(user.id)
         await update.message.reply_text(
-            f"{user.first_name}, you were given sufficient opportunity.\n\nEven a butler has limits.\n\nThis concludes your presence here."
+            f"{user.first_name}, you were given sufficient opportunity.\n\nEven a butler has limits.\n\nThis concludes your presence here.",
+            reply_markup=admin_controls(user.id)  # ✅ ADDED
         )
 
 # WARNINGS
@@ -186,7 +201,8 @@ async def mute(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await chat.restrict_member(user.id, ChatPermissions(can_send_messages=False), until_date=mute_until)
 
     await update.message.reply_text(
-        f"{user.first_name}, that will be sufficient.\n\nYou will remain silent for a while.\n\nDo consider your approach when you return."
+        f"{user.first_name}, that will be sufficient.\n\nYou will remain silent for a while.\n\nDo consider your approach when you return.",
+        reply_markup=admin_controls(user.id)  # ✅ ADDED
     )
 
 # UNMUTE
@@ -223,7 +239,8 @@ async def ban(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await chat.ban_member(user.id)
 
     await update.message.reply_text(
-        f"{user.first_name}, your presence is no longer required.\n\nYou’ve exceeded what was permitted.\n\nThis matter is concluded."
+        f"{user.first_name}, your presence is no longer required.\n\nYou’ve exceeded what was permitted.\n\nThis matter is concluded.",
+        reply_markup=admin_controls(user.id)  # ✅ ADDED
     )
 
 # UNBAN
@@ -238,6 +255,35 @@ async def unban(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         "You have been allowed back.\n\nDo not misunderstand this as leniency."
     )
+
+# ================= BUTTON HANDLER (ADDED) =================
+
+async def admin_action_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+
+    data = query.data
+    chat = query.message.chat
+    user_id = int(data.split("_")[1])
+
+    admins = await chat.get_administrators()
+    admin_ids = [a.user.id for a in admins]
+
+    if query.from_user.id not in admin_ids:
+        await query.answer("That action is not within your reach.", show_alert=True)
+        return
+
+    if data.startswith("removewarn"):
+        warnings[user_id] = max(0, warnings.get(user_id, 0) - 1)
+        await query.edit_message_text("The notice has been withdrawn.\n\nDo ensure standards are maintained.")
+
+    elif data.startswith("unmute"):
+        await chat.restrict_member(user_id, ChatPermissions(can_send_messages=True))
+        await query.edit_message_text("Restriction lifted.\n\nYou may proceed again—properly this time.")
+
+    elif data.startswith("unban"):
+        await chat.unban_member(user_id)
+        await query.edit_message_text("Permission to return has been granted.\n\nDo not misuse it.")
 
 # ================= HANDLERS =================
 
@@ -257,5 +303,8 @@ app.add_handler(CommandHandler("mute", mute), group=1)
 app.add_handler(CommandHandler("unmute", unmute), group=1)
 app.add_handler(CommandHandler("ban", ban), group=1)
 app.add_handler(CommandHandler("unban", unban), group=1)
+
+# ✅ ADDED HANDLER
+app.add_handler(CallbackQueryHandler(admin_action_handler))
 
 app.run_polling()
