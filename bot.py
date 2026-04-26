@@ -137,7 +137,7 @@ Response to /help.
 Commands are to be used with awareness and restraint."""
     await update.message.reply_text(text)
 
-# ================= RULES (ADDED ONLY) =================
+# ================= RULES =================
 
 async def rules(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("""Rules of this establishment:
@@ -147,7 +147,10 @@ Respect is not optional. Harassment or provocation will be dealt with.
 — Spam  
 No flooding or unnecessary noise. Quality over quantity.  
 — Content  
-No explicit, illegal, or disturbing material.  
+No NSFW, pornography, explicit, or disturbing material.  
+No gore or violent media.  
+— Promotion  
+Promotion, advertising, or self-promotion is strictly prohibited.  
 — Relevance  
 Stay within the tone. Derailing will not be entertained.  
 — Privacy  
@@ -161,8 +164,6 @@ Limits are enforced, not tested.
 
 Failure to comply results in restriction or removal. You have been informed.""")
 
-# ================= AUTO RULES (ADDED ONLY) =================
-
 async def auto_rules(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.message.new_chat_members:
         await update.message.reply_text("""Rules of this establishment:
@@ -172,7 +173,10 @@ Respect is not optional. Harassment or provocation will be dealt with.
 — Spam  
 No flooding or unnecessary noise. Quality over quantity.  
 — Content  
-No explicit, illegal, or disturbing material.  
+No NSFW, pornography, explicit, or disturbing material.  
+No gore or violent media.  
+— Promotion  
+Promotion, advertising, or self-promotion is strictly prohibited.  
 — Relevance  
 Stay within the tone. Derailing will not be entertained.  
 — Privacy  
@@ -223,11 +227,18 @@ async def warn(update: Update, context: ContextTypes.DEFAULT_TYPE):
             reply_markup=admin_controls("ban", user.id)
         )
 
+# FIXED warnings_check ONLY
 async def warnings_check(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.message.reply_to_message:
         return
 
     user = update.message.reply_to_message.from_user
+    chat = update.effective_chat
+
+    if await is_protected(user.id, chat):
+        await update.message.reply_text("That action is not within your reach.")
+        return
+
     count = warnings.get(user.id, 0)
 
     if count == 0:
