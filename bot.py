@@ -137,6 +137,55 @@ Response to /help.
 Commands are to be used with awareness and restraint."""
     await update.message.reply_text(text)
 
+# ================= RULES (ADDED ONLY) =================
+
+async def rules(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("""Rules of this establishment:
+
+— Conduct  
+Respect is not optional. Harassment or provocation will be dealt with.  
+— Spam  
+No flooding or unnecessary noise. Quality over quantity.  
+— Content  
+No explicit, illegal, or disturbing material.  
+— Relevance  
+Stay within the tone. Derailing will not be entertained.  
+— Privacy  
+Do not share personal information.  
+— Authority  
+Moderation decisions are not debated.  
+— Commands  
+Use responsibly. Misuse will be addressed.  
+— Boundaries  
+Limits are enforced, not tested.  
+
+Failure to comply results in restriction or removal. You have been informed.""")
+
+# ================= AUTO RULES (ADDED ONLY) =================
+
+async def auto_rules(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.message.new_chat_members:
+        await update.message.reply_text("""Rules of this establishment:
+
+— Conduct  
+Respect is not optional. Harassment or provocation will be dealt with.  
+— Spam  
+No flooding or unnecessary noise. Quality over quantity.  
+— Content  
+No explicit, illegal, or disturbing material.  
+— Relevance  
+Stay within the tone. Derailing will not be entertained.  
+— Privacy  
+Do not share personal information.  
+— Authority  
+Moderation decisions are not debated.  
+— Commands  
+Use responsibly. Misuse will be addressed.  
+— Boundaries  
+Limits are enforced, not tested.  
+
+Failure to comply results in restriction or removal. You have been informed.""")
+
 # WARN
 async def warn(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.message.reply_to_message:
@@ -174,7 +223,6 @@ async def warn(update: Update, context: ContextTypes.DEFAULT_TYPE):
             reply_markup=admin_controls("ban", user.id)
         )
 
-# WARNINGS (UNCHANGED)
 async def warnings_check(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.message.reply_to_message:
         return
@@ -191,7 +239,6 @@ async def warnings_check(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"Current standing: {count} notice(s).\n\nI would advise not increasing that number."
         )
 
-# MUTE
 async def mute(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.message.reply_to_message:
         return
@@ -212,7 +259,6 @@ async def mute(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply_markup=admin_controls("mute", user.id)
     )
 
-# UNMUTE (UNCHANGED)
 async def unmute(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.message.reply_to_message:
         return
@@ -225,7 +271,6 @@ async def unmute(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"{user.first_name}, you may proceed again.\n\nDo ensure the previous inconvenience is not repeated."
     )
 
-# BAN
 async def ban(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.message.reply_to_message:
         return
@@ -250,7 +295,6 @@ async def ban(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply_markup=admin_controls("ban", user.id)
     )
 
-# UNBAN (UNCHANGED)
 async def unban(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if len(context.args) == 0:
         return
@@ -297,6 +341,8 @@ async def admin_action_handler(update: Update, context: ContextTypes.DEFAULT_TYP
 app = ApplicationBuilder().token(TOKEN).build()
 
 app.add_handler(MessageHandler(filters.StatusUpdate.NEW_CHAT_MEMBERS, welcome))
+app.add_handler(MessageHandler(filters.StatusUpdate.NEW_CHAT_MEMBERS, auto_rules), group=1)
+
 app.add_handler(CommandHandler("ping", ping))
 app.add_handler(CommandHandler("info", info))
 app.add_handler(CommandHandler("admins", admins))
@@ -304,6 +350,7 @@ app.add_handler(CommandHandler("report", report))
 
 app.add_handler(CommandHandler("start", start), group=1)
 app.add_handler(CommandHandler("help", help_command), group=1)
+app.add_handler(CommandHandler("rules", rules), group=1)
 app.add_handler(CommandHandler("warn", warn), group=1)
 app.add_handler(CommandHandler("warnings", warnings_check), group=1)
 app.add_handler(CommandHandler("mute", mute), group=1)
